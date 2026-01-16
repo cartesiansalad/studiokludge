@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StudioKludge</title>
+  <style>
+    :root{
+      --max-width:1200px;
+      --bg:#ffffff;
+      --text:#111;
+    }
+
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+    /* Page container acts as the positioned parent for the pinned "below" image */
+    .page {
+      position:relative;
+      min-height:100vh;
+      box-sizing:border-box;
+      padding:4vh 1.5rem 0; /* top padding so splash is not flush with top; bottom padding will be adjusted by JS */
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+
+    /* Top splash area (normal flow) */
+    .splash {
+      width:100%;
+      max-width:var(--max-width);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto;
+      z-index:1;
+    }
+    .splash img {
+      display:block;
+      width:100%;
+      max-width:960px;
+      height:auto;
+      object-fit:contain;
+      max-height:60vh;
+      border-radius:6px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.08);
+      background:transparent;
+    }
+
+    /* Second image — pinned to bottom: 100px from viewport bottom, horizontally centered */
+    .below {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 100px; /* requested spacing from bottom of page */
+      width: auto;
+      max-width:760px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 1rem;
+      z-index:2; /* sit above the splash if overlapping */
+      pointer-events:auto;
+    }
+    .below img {
+      display:block;
+      width:100%;
+      height:auto;
+      object-fit:contain;
+      max-height:40vh; /* avoids overwhelming short viewports — adjusted responsively below */
+      filter: none;
+      backface-visibility: hidden;
+      background:transparent;
+    }
+
+    footer {
+      /* bottom space will be handled by JS so footer doesn't get overlapped */
+      color:#666;
+      font-size:0.9rem;
+      text-align:center;
+      width:100%;
+      max-width:var(--max-width);
+      margin-left:auto;
+      margin-right:auto;
+      padding:1.5rem 1rem 2rem;
+      box-sizing:border-box;
+    }
+
+    /* On small screens reduce sizes so things don't overlap */
+    @media (max-width:800px) {
+      .splash img { max-height:50vh; }
+      .below { max-width:640px; bottom:80px; }
+      .below img { max-height:35vh; }
+    }
+
+    @media (max-width:420px) {
+      .splash img { max-height:45vh; }
+      .below { bottom:70px; width:92%; }
+      .below img { max-height:30vh; }
+      footer { font-size:0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page" role="main">
+    <section class="splash" aria-label="Main splash">
+      <!-- Main splash image (Image 1) -->
+      <img src="images/splash.png" alt="StudioKludge splash" loading="eager" />
+    </section>
+
+    <section class="below" aria-label="Second (pinned) image">
+      <!-- Second image: save your transparent PNG (Image 2) as images/below.png -->
+      <img id="belowImg" src="images/below.png" alt="StudioKludge decorative image" loading="lazy" />
+    </section>
+
+    <footer>
+      © <span id="year"></span> cartesiansalad — StudioKludge
+    </footer>
+  </main>
+
+  <script>
+    // Insert current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Ensure footer and page content stay visible by adding bottom padding equal to the displayed height of the pinned image + extra spacing.
+    (function() {
+      const page = document.querySelector('.page');
+      const belowImg = document.getElementById('belowImg');
+
+      function adjustBottomPadding() {
+        if (!belowImg || !page) return;
+        const rect = belowImg.getBoundingClientRect();
+        const imgHeight = Math.round(rect.height || 0);
+        const extra = 140; // extra space beyond the pinned 100px
+        if (imgHeight > 0) {
+          page.style.paddingBottom = (imgHeight + extra) + 'px';
+        } else {
+          page.style.paddingBottom = '';
+        }
+      }
+
+      if (belowImg.complete) {
+        adjustBottomPadding();
+      } else {
+        belowImg.addEventListener('load', adjustBottomPadding);
+      }
+
+      window.addEventListener('resize', adjustBottomPadding);
+      window.addEventListener('orientationchange', () => setTimeout(adjustBottomPadding, 250));
+    })();
+  </script>
+</body>
+</html>
